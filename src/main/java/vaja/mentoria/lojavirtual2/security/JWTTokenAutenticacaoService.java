@@ -1,22 +1,24 @@
 package vaja.mentoria.lojavirtual2.security;
 
-import java.sql.Date;
-
+import java.io.IOException;
+import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.catalina.core.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.SignatureException;
 import vaja.mentoria.lojavirtual2.ApplicationContextLoad;
 import vaja.mentoria.lojavirtual2.model.Usuario;
 import vaja.mentoria.lojavirtual2.repository.UsuarioRepository;
 
+/*Criar a autenticação e retonar também a autenticação JWT*/
 @Service
 @Component
 public class JWTTokenAutenticacaoService {
@@ -48,69 +50,85 @@ public class JWTTokenAutenticacaoService {
 		/*Dá a resposta pra tela e para o cliente, outra API, navegador, aplicativo, javascript, outra chamadajava*/
 		response.addHeader(HEADER_STRING, token);
 		
+		liberacaoCors(response);
 		
 		/*Usado para ver no Postman para teste*/
 		response.getWriter().write("{\"Authorization\": \"" + token + "\"}");
 		
 	}
 	
-	//Retorna o usuário validado com TOKEN ou caso não seja valido retorna null*/
 	
-	public Authentication getAuthentication(HttpServletRequest request, HttpServletResponse response) {
+	/*Retorna o usuário validado com token ou caso nao seja valido retona null*/
+	public Authentication getAuthetication(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		
 		String token = request.getHeader(HEADER_STRING);
 		
+		try {
+		
 		if (token != null) {
 			
-			String tokenLimpo = token.replace(TOKEN_PREFIX,"").trim();
+			String tokenLimpo = token.replace(TOKEN_PREFIX, "").trim();
 			
-			//Validar o token na requisição obtendo o usuário*/.
-			
-			String user = Jwts.parser().setSigningKey(SECRET)
+			/*Faz a validacao do token do usuário na requisicao e obtem o USER*/
+			String user = Jwts.parser().
+					setSigningKey(SECRET)
 					.parseClaimsJws(tokenLimpo)
-					.getBody().getSubject();/*ADMIN ou ALEX*/
+					.getBody().getSubject(); /*ADMIN ou Alex*/
 			
 			if (user != null) {
 				
-				Usuario usuario = ApplicationContextLoad.getApplicationContext().
-						          getBean(UsuarioRepository.class).findUserByLogin(user);
+				Usuario usuario = ApplicationContextLoad.
+						getApplicationContext().
+						getBean(UsuarioRepository.class).findUserByLogin(user);
 				
-				if(usuario != null) {
+				if (usuario != null) {
 					return new UsernamePasswordAuthenticationToken(
 							usuario.getLogin(),
-							usuario.getPassword(),
+							usuario.getPassword(), 
 							usuario.getAuthorities());
 				}
+				
 			}
 			
 		}
 		
-		liberacaoCors(response);
+		}catch (SignatureException e) {
+			response.getWriter().write("Token está inválido.");
+
+		}catch (ExpiredJwtException e) {
+			response.getWriter().write("Token está expirado, efetue o login novamente.");
+		}
+		finally {
+			liberacaoCors(response);
+		}
+		
 		return null;
 	}
 	
 	
-	//Liberação de CORS no navegador
-	@SuppressWarnings("unused")
+	/*Fazendo liberação contra erro de COrs no navegador*/
 	private void liberacaoCors(HttpServletResponse response) {
 		
-		if (response.getHeader("Acess-Control-Allow-Origin") == null) {
-			response.addHeader("Acess-Control-Allow-Origin", "*");
+		if (response.getHeader("Access-Control-Allow-Origin") == null) {
+			response.addHeader("Access-Control-Allow-Origin", "*");
 		}
 		
-
+		
 		if (response.getHeader("Access-Control-Allow-Headers") == null) {
 			response.addHeader("Access-Control-Allow-Headers", "*");
 		}
-
+		
+		
 		if (response.getHeader("Access-Control-Request-Headers") == null) {
 			response.addHeader("Access-Control-Request-Headers", "*");
 		}
+		
 		if (response.getHeader("Access-Control-Allow-Methods") == null) {
 			response.addHeader("Access-Control-Allow-Methods", "*");
 		}
 		
 	}
+	
 	
 
 }
