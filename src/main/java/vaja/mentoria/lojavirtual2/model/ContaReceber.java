@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.Date; // Importe java.util.Date em vez de java.sql.Date
 import java.util.Objects;
 
+import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -17,6 +18,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
 import vaja.mentoria.lojavirtual2.enums.StatusContaReceber;
 
 @Entity
@@ -24,112 +28,139 @@ import vaja.mentoria.lojavirtual2.enums.StatusContaReceber;
 @SequenceGenerator(name = "seq_conta_receber", sequenceName = "seq_conta_receber", allocationSize = 1, initialValue = 1)
 public class ContaReceber implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_conta_receber")
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_conta_receber")
+	private Long id;
 
-    private String descricao;
+	@Column(nullable = false)
+	private String descricao;
 
-    @Enumerated(EnumType.STRING)
-    private StatusContaReceber status;
+	@Column(nullable = false)
+	@Enumerated(EnumType.STRING)
+	private StatusContaReceber status;
 
-    private Date dtVencimento;
+	@Column(nullable = false)
+	@Temporal(TemporalType.DATE)
+	private Date dtVencimento;
 
-    // Remova a anotação @Temporal(TemporalType.DATE)
-    private Date dtPagamento;
+	@Temporal(TemporalType.DATE)
+	private Date dtPagamento;
 
-    private BigDecimal valorTotal;
+	@Column(nullable = false)
+	private BigDecimal valorTotal;
 
-    private BigDecimal valorDesconto;
+	
+	private BigDecimal valorDesconto;
 
-    public Long getId() {
-        return id;
-    }
+	@ManyToOne(targetEntity = Pessoa.class)
+	@JoinColumn(name = "pessoa_id", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "pessoa_fk"))
+	private Pessoa pessoa;
+	
+	
+	@ManyToOne(targetEntity = Pessoa.class)
+	@JoinColumn(name = "empresa_id", nullable = false, 
+	foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "empresa_id_fk"))
+	private Pessoa empresa;
+	
+	
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public Pessoa getEmpresa() {
+		return empresa;
+	}
 
-    public String getDescricao() {
-        return descricao;
-    }
+	public void setEmpresa(Pessoa empresa) {
+		this.empresa = empresa;
+	}
 
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public StatusContaReceber getStatus() {
-        return status;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public void setStatus(StatusContaReceber status) {
-        this.status = status;
-    }
+	public String getDescricao() {
+		return descricao;
+	}
 
-    public Date getDtVencimento() {
-        return dtVencimento;
-    }
+	public void setDescricao(String descricao) {
+		this.descricao = descricao;
+	}
 
-    public void setDtVencimento(Date dtVencimento) {
-        this.dtVencimento = dtVencimento;
-    }
+	public StatusContaReceber getStatus() {
+		return status;
+	}
 
-    public Date getDtPagamento() {
-        return dtPagamento;
-    }
+	public void setStatus(StatusContaReceber status) {
+		this.status = status;
+	}
 
-    public void setDtPagamento(Date dtPagamento) {
-        this.dtPagamento = dtPagamento;
-    }
+	public Date getDtVencimento() {
+		return dtVencimento;
+	}
 
-    public BigDecimal getValorTotal() {
-        return valorTotal;
-    }
+	public void setDtVencimento(Date dtVencimento) {
+		this.dtVencimento = dtVencimento;
+	}
 
-    public void setValorTotal(BigDecimal valorTotal) {
-        this.valorTotal = valorTotal;
-    }
+	public Date getDtPagamento() {
+		return dtPagamento;
+	}
 
-    public BigDecimal getValorDesconto() {
-        return valorDesconto;
-    }
+	public void setDtPagamento(Date dtPagamento) {
+		this.dtPagamento = dtPagamento;
+	}
 
-    public void setValorDesconto(BigDecimal valorDesconto) {
-        this.valorDesconto = valorDesconto;
-    }
+	public BigDecimal getValorTotal() {
+		return valorTotal;
+	}
 
-    public Pessoa getPessoa() {
-        return pessoa;
-    }
+	public void setValorTotal(BigDecimal valorTotal) {
+		this.valorTotal = valorTotal;
+	}
 
-    public void setPessoa(Pessoa pessoa) {
-        this.pessoa = pessoa;
-    }
+	public BigDecimal getValorDesconto() {
+		return valorDesconto;
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(descricao, dtPagamento, dtVencimento, id, pessoa, status, valorDesconto, valorTotal);
-    }
+	public void setValorDesconto(BigDecimal valorDesconto) {
+		this.valorDesconto = valorDesconto;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ContaReceber other = (ContaReceber) obj;
-        return Objects.equals(descricao, other.descricao) && Objects.equals(dtPagamento, other.dtPagamento)
-                && Objects.equals(dtVencimento, other.dtVencimento) && Objects.equals(id, other.id)
-                && Objects.equals(pessoa, other.pessoa) && status == other.status
-                && Objects.equals(valorDesconto, other.valorDesconto) && Objects.equals(valorTotal, other.valorTotal);
-    }
+	public Pessoa getPessoa() {
+		return pessoa;
+	}
 
-    @ManyToOne(targetEntity = Pessoa.class)
-    @JoinColumn(name = "pessoa_id", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "pessoa_fk"))
-    private Pessoa pessoa;
+	public void setPessoa(Pessoa pessoa) {
+		this.pessoa = pessoa;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ContaReceber other = (ContaReceber) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		return true;
+	}
 
 }
